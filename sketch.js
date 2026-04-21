@@ -272,5 +272,22 @@ new p5(function(p) {
     });
 
     document.getElementById('export-btn').addEventListener('click', doExport);
+
+    // Panel toggle
+    const panel     = document.getElementById('panel');
+    const toggleBtn = document.getElementById('toggle-btn');
+    const closeBtn  = document.getElementById('close-btn');
+
+    function openPanel() {
+      panel.classList.add('open');
+      toggleBtn.classList.add('hidden');
+    }
+    function closePanel() {
+      panel.classList.remove('open');
+      toggleBtn.classList.remove('hidden');
+    }
+
+    toggleBtn.addEventListener('click', openPanel);
+    closeBtn.addEventListener('click', closePanel);
   }
 });
