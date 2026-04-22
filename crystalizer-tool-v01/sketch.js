@@ -71,15 +71,15 @@ function subdivide(verts, faces, levels) {
 // ── p5 sketch ──────────────────────────────────────────────────────────────────
 new p5(function(p) {
   const RADIUS = 150;
-  const DISP   = 70;
+  const DISP   = 110;
   const LIGHT  = norm3([0.8, 1.4, 1.0]);
 
   const cfg = {
-    seed: 42, nscale: 0.30, offX: 0, offY: 0,
+    seed: 42, nscale: 0.80, offX: 0, offY: 0,
     complexity: 2, colorA: '#1a3aff', colorB: '#ff1a6e'
   };
 
-  let geo, displaced, faceCache;
+  let geo, faceCache;
   let camTheta = 0.4, camPhi = 0.70, camR = 480;
   let dragging = false, px = 0, py = 0;
 
@@ -91,34 +91,39 @@ new p5(function(p) {
     const faces = BASE_F.map(f => [...f]);
     geo = subdivide(verts, faces, cfg.complexity - 1);
 
-    // Displace each vertex outward by noise amount
-    displaced = geo.vertices.map(v => {
-      const nx = v[0] * cfg.nscale + cfg.offX;
-      const ny = v[1] * cfg.nscale + cfg.offY;
-      const nz = v[2] * cfg.nscale;
-      const r = RADIUS + p.noise(nx, ny, nz) * DISP;
-      return [v[0]*r, v[1]*r, v[2]*r];
-    });
-
-    // Precompute per-face normal and gradient color
     const cA = hexToRGB(cfg.colorA);
     const cB = hexToRGB(cfg.colorB);
 
+    // Per-face displacement: all 3 vertices of a face share the same noise value
+    // sampled at the face centroid. This makes each face flat but at a different
+    // radius → sharp crystal facets instead of a bumpy sphere.
     faceCache = geo.faces.map(([ai, bi, ci]) => {
-      const a = displaced[ai], b = displaced[bi], c = displaced[ci];
-      const ctr = [
-        (a[0]+b[0]+c[0]) / 3,
-        (a[1]+b[1]+c[1]) / 3,
-        (a[2]+b[2]+c[2]) / 3
-      ];
+      const uv0 = geo.vertices[ai];
+      const uv1 = geo.vertices[bi];
+      const uv2 = geo.vertices[ci];
+
+      // Centroid on unit sphere
+      const ctr = norm3([
+        (uv0[0]+uv1[0]+uv2[0]) / 3,
+        (uv0[1]+uv1[1]+uv2[1]) / 3,
+        (uv0[2]+uv1[2]+uv2[2]) / 3
+      ]);
+
+      // Two noise octaves for more irregular, jagged look
+      const nx = ctr[0] * cfg.nscale + cfg.offX;
+      const ny = ctr[1] * cfg.nscale + cfg.offY;
+      const nz = ctr[2] * cfg.nscale;
+      const n = p.noise(nx, ny, nz) * 0.65
+              + p.noise(nx * 2.8 + 17.3, ny * 2.8 + 5.1, nz * 2.8) * 0.35;
+
+      const r = RADIUS + n * DISP;
+
+      const a = [uv0[0]*r, uv0[1]*r, uv0[2]*r];
+      const b = [uv1[0]*r, uv1[1]*r, uv1[2]*r];
+      const c = [uv2[0]*r, uv2[1]*r, uv2[2]*r];
+
       const normal = crossNorm(a, b, c);
-      // Sample noise at centroid for gradient t value
-      const t = p.noise(
-        ctr[0] / RADIUS * cfg.nscale + cfg.offX,
-        ctr[1] / RADIUS * cfg.nscale + cfg.offY,
-        ctr[2] / RADIUS * cfg.nscale
-      );
-      return { ai, bi, ci, normal, color: lerpRGB(cA, cB, t) };
+      return { a, b, c, normal, color: lerpRGB(cA, cB, n) };
     });
   }
 
@@ -160,10 +165,9 @@ new p5(function(p) {
         Math.min(255, f.color[2] * diff + spec)
       );
       p.beginShape();
-      const a = displaced[f.ai], b = displaced[f.bi], c = displaced[f.ci];
-      p.vertex(a[0], a[1], a[2]);
-      p.vertex(b[0], b[1], b[2]);
-      p.vertex(c[0], c[1], c[2]);
+      p.vertex(f.a[0], f.a[1], f.a[2]);
+      p.vertex(f.b[0], f.b[1], f.b[2]);
+      p.vertex(f.c[0], f.c[1], f.c[2]);
       p.endShape(p.CLOSE);
     }
   }
@@ -190,10 +194,40 @@ new p5(function(p) {
       px = e.clientX; py = e.clientY;
     });
 
-    // Scroll to zoom
     el.addEventListener('wheel', e => {
       camR = Math.max(200, Math.min(1400, camR + e.deltaY * 0.5));
       e.preventDefault();
+    }, { passive: false });
+
+    // Touch: one finger = orbit, two fingers = pinch zoom
+    let lastTouchX = 0, lastTouchY = 0, lastPinchDist = 0;
+    el.addEventListener('touchstart', e => {
+      e.preventDefault();
+      if (e.touches.length === 1) {
+        lastTouchX = e.touches[0].clientX;
+        lastTouchY = e.touches[0].clientY;
+      } else if (e.touches.length === 2) {
+        lastPinchDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+      }
+    }, { passive: false });
+    el.addEventListener('touchmove', e => {
+      e.preventDefault();
+      if (e.touches.length === 1) {
+        camTheta -= (e.touches[0].clientX - lastTouchX) * 0.007;
+        camPhi = Math.max(0.05, Math.min(Math.PI - 0.05, camPhi - (e.touches[0].clientY - lastTouchY) * 0.007));
+        lastTouchX = e.touches[0].clientX;
+        lastTouchY = e.touches[0].clientY;
+      } else if (e.touches.length === 2) {
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        camR = Math.max(200, Math.min(1400, camR - (dist - lastPinchDist) * 1.5));
+        lastPinchDist = dist;
+      }
     }, { passive: false });
   };
 
@@ -247,5 +281,22 @@ new p5(function(p) {
     });
 
     document.getElementById('export-btn').addEventListener('click', doExport);
+
+    // Panel toggle
+    const panel     = document.getElementById('panel');
+    const toggleBtn = document.getElementById('toggle-btn');
+    const closeBtn  = document.getElementById('close-btn');
+
+    function openPanel() {
+      panel.classList.add('open');
+      toggleBtn.classList.add('hidden');
+    }
+    function closePanel() {
+      panel.classList.remove('open');
+      toggleBtn.classList.remove('hidden');
+    }
+
+    toggleBtn.addEventListener('click', openPanel);
+    closeBtn.addEventListener('click', closePanel);
   }
 });
