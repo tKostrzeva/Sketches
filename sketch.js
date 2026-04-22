@@ -226,13 +226,13 @@ new p5(function(p) {
   function doExport() { p.clear(); render(); p.saveCanvas('crystal','png'); }
 
   function bindUI() {
-    function bindSlider(id, key, fmt) {
+    function bindSlider(id, key, fmt, rebuild = true) {
       const el = document.getElementById(id);
       const vl = document.getElementById(id+'-v');
       el.addEventListener('input', () => {
         cfg[key] = parseFloat(el.value);
         if (vl) vl.textContent = fmt(cfg[key]);
-        buildCrystal();
+        if (rebuild) buildCrystal();
       });
     }
     const ptCounts = [12, 24, 48, 96, 200, 400];
@@ -242,13 +242,7 @@ new p5(function(p) {
     bindSlider('offy',       'offY',       v => v.toFixed(2));
     bindSlider('complexity', 'complexity', v => { const n=Math.round(v); return n+'  ('+ptCounts[n-1]+' pts)'; });
     bindSlider('spike',      'spike',      v => v.toFixed(2));
-
-    const opacityEl = document.getElementById('opacity');
-    const opacityVl = document.getElementById('opacity-v');
-    opacityEl.addEventListener('input', () => {
-      cfg.opacity = parseFloat(opacityEl.value);
-      if (opacityVl) opacityVl.textContent = Math.round(cfg.opacity);
-    });
+    bindSlider('opacity',    'opacity',    v => Math.round(v), false);
 
     document.getElementById('colorA').addEventListener('input', e => { cfg.colorA=e.target.value; buildCrystal(); });
     document.getElementById('colorB').addEventListener('input', e => { cfg.colorB=e.target.value; buildCrystal(); });
