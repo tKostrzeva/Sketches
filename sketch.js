@@ -21,14 +21,12 @@ function convexHull3D(pts) {
   const n = pts.length;
   if (n < 4) return [];
 
-  // Returns >0 if p is above plane defined by triangle (a,b,c) with outward normal
   function above(fi, p) {
     const [a, b, c] = faces[fi];
     const nrm = cross3(sub3(pts[b], pts[a]), sub3(pts[c], pts[a]));
     return dot3(nrm, sub3(p, pts[a]));
   }
 
-  // Find 4 extreme points for initial tetrahedron
   let iMinX = 0, iMaxX = 0, iMinY = 0, iMaxY = 0;
   for (let i = 1; i < n; i++) {
     if (pts[i][0] < pts[iMinX][0]) iMinX = i;
@@ -38,7 +36,6 @@ function convexHull3D(pts) {
   }
 
   const [p0, p1, p2] = [...new Set([iMinX, iMaxX, iMinY, iMaxY, 0, 1, 2])].slice(0, 3);
-  // Find p3: farthest from plane p0-p1-p2
   const nrm012 = cross3(sub3(pts[p1], pts[p0]), sub3(pts[p2], pts[p0]));
   let p3 = -1, maxD = 0;
   for (let i = 0; i < n; i++) {
@@ -48,12 +45,10 @@ function convexHull3D(pts) {
   }
   if (p3 < 0) return [];
 
-  // Faces of initial tetrahedron
   let faces = [
     [p0,p1,p2], [p0,p3,p1], [p0,p2,p3], [p1,p3,p2]
   ];
 
-  // Orient all faces outward
   const cx = (pts[p0][0]+pts[p1][0]+pts[p2][0]+pts[p3][0])/4;
   const cy = (pts[p0][1]+pts[p1][1]+pts[p2][1]+pts[p3][1])/4;
   const cz = (pts[p0][2]+pts[p1][2]+pts[p2][2]+pts[p3][2])/4;
@@ -63,7 +58,6 @@ function convexHull3D(pts) {
     return dot3(nrm, sub3(centroid, pts[a])) > 0 ? [a,c,b] : [a,b,c];
   });
 
-  // Add each remaining point
   for (let i = 0; i < n; i++) {
     if (i === p0 || i === p1 || i === p2 || i === p3) continue;
 
@@ -95,7 +89,7 @@ function convexHull3D(pts) {
 // ── p5 sketch ──────────────────────────────────────────────────────────────────
 new p5(function(p) {
   const RADIUS = 150;
-  const DISP   = 100;
+  const DISP   = 200;
   const LIGHT  = norm3([0.8, 1.4, 1.0]);
 
   const cfg = {
@@ -107,15 +101,13 @@ new p5(function(p) {
   let camTheta = 0.4, camPhi = 0.70, camR = 480;
   let dragging = false, px = 0, py = 0;
 
-  // ── Build crystal ─────────────────────────────────────────────────────────────
   function buildCrystal() {
     p.noiseSeed(cfg.seed);
     p.randomSeed(cfg.seed);
 
-    const counts = [18, 36, 72, 140];
+    const counts = [12, 24, 48, 96, 200, 400];
     const N = counts[cfg.complexity - 1];
 
-    // Fibonacci sphere + seeded random jitter
     const unitPts = [];
     for (let i = 0; i < N; i++) {
       const phi   = Math.acos(1 - 2*(i+0.5)/N);
@@ -128,13 +120,15 @@ new p5(function(p) {
       ]));
     }
 
-    // Noise displacement (two octaves)
     pts = unitPts.map(v => {
       const nx = v[0]*cfg.nscale + cfg.offX;
       const ny = v[1]*cfg.nscale + cfg.offY;
       const nz = v[2]*cfg.nscale;
-      const n = p.noise(nx,ny,nz)*0.65 + p.noise(nx*2.8+17.3,ny*2.8+5.1,nz*2.8)*0.35;
-      const r = RADIUS + n*DISP;
+      const raw = p.noise(nx, ny, nz) * 0.65
+                + p.noise(nx*2.8+17.3, ny*2.8+5.1, nz*2.8) * 0.35;
+      // Power curve: exponent < 1 = rounder, > 1 = spikier
+      const n = Math.pow(raw, 1.8);
+      const r = RADIUS + n * DISP;
       return [v[0]*r, v[1]*r, v[2]*r];
     });
 
@@ -156,7 +150,6 @@ new p5(function(p) {
     });
   }
 
-  // ── Camera ───────────────────────────────────────────────────────────────────────
   function camEye() {
     return [
       camR*Math.sin(camPhi)*Math.sin(camTheta),
@@ -165,7 +158,6 @@ new p5(function(p) {
     ];
   }
 
-  // ── Render ──────────────────────────────────────────────────────────────────────
   function render() {
     const eye = camEye();
     p.camera(eye[0],eye[1],eye[2], 0,0,0, 0,1,0);
@@ -192,7 +184,6 @@ new p5(function(p) {
     }
   }
 
-  // ── p5 lifecycle ─────────────────────────────────────────────────────────────
   p.setup = function() {
     const wrap = document.getElementById('canvas-wrap');
     const cnv = p.createCanvas(wrap.clientWidth, wrap.clientHeight, p.WEBGL);
@@ -244,7 +235,6 @@ new p5(function(p) {
 
   function doExport() { p.clear(); render(); p.saveCanvas('crystal','png'); }
 
-  // ── UI ───────────────────────────────────────────────────────────────────────────
   function bindUI() {
     function bindSlider(id, key, fmt) {
       const el = document.getElementById(id);
@@ -255,7 +245,7 @@ new p5(function(p) {
         buildCrystal();
       });
     }
-    const ptCounts = [18,36,72,140];
+    const ptCounts = [12, 24, 48, 96, 200, 400];
     bindSlider('seed',       'seed',       v => Math.round(v));
     bindSlider('nscale',     'nscale',     v => v.toFixed(2));
     bindSlider('offx',       'offX',       v => v.toFixed(2));
