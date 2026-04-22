@@ -1,0 +1,235 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #08080f;
+  font-family: 'Courier New', Courier, monospace;
+  color: #c0c0d0;
+}
+
+/* Canvas always fills full viewport */
+#canvas-wrap {
+  position: fixed;
+  inset: 0;
+}
+
+#canvas-wrap canvas {
+  display: block;
+}
+
+/* ── Toggle button ───────────────────────────────────────────────────────────── */
+#toggle-btn {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 200;
+  width: 36px;
+  height: 36px;
+  background: rgba(12, 12, 24, 0.85);
+  border: 1px solid #2a2a50;
+  color: #7080b0;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: border-color 0.2s, color 0.2s;
+}
+
+#toggle-btn:hover {
+  border-color: #5080ff;
+  color: #90b0ff;
+}
+
+#toggle-btn.hidden {
+  display: none;
+}
+
+/* ── Panel ───────────────────────────────────────────────────────────────────── */
+#panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 272px;
+  height: 100vh;
+  z-index: 100;
+  background: rgba(10, 10, 20, 0.96);
+  border-left: 1px solid #1a1a2e;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 0 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+
+  transform: translateX(100%);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#panel.open {
+  transform: translateX(0);
+}
+
+/* ── Panel header with close button ─────────────────────────────────────────── */
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0 12px;
+  border-bottom: 1px solid #1a1a2e;
+  flex-shrink: 0;
+}
+
+.panel-title {
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #5050a0;
+}
+
+#close-btn {
+  background: transparent;
+  border: none;
+  color: #404060;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+#close-btn:hover {
+  color: #8090c0;
+}
+
+/* ── Controls ────────────────────────────────────────────────────────────────── */
+.ctrl {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ctrl-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: #7070a8;
+}
+
+.ctrl-label .val {
+  color: #b0c0ff;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 1px;
+  background: #252540;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #5080ff;
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #5080ff;
+  border: none;
+  cursor: pointer;
+}
+
+.divider {
+  height: 1px;
+  background: #1a1a2e;
+  flex-shrink: 0;
+}
+
+/* ── Colors ──────────────────────────────────────────────────────────────────── */
+.color-row {
+  display: flex;
+  gap: 10px;
+}
+
+.color-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.color-item label {
+  font-size: 10px;
+  color: #7070a8;
+  letter-spacing: 0.5px;
+}
+
+input[type="color"] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 36px;
+  border: 1px solid #252540;
+  border-radius: 3px;
+  cursor: pointer;
+  background: none;
+  padding: 2px;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 2px;
+}
+
+/* ── Export button ───────────────────────────────────────────────────────────── */
+#export-btn {
+  margin-top: auto;
+  background: transparent;
+  border: 1px solid #2a2a50;
+  color: #7080b0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+#export-btn:hover,
+#export-btn:active {
+  border-color: #5080ff;
+  color: #90b0ff;
+}
+
+#hint {
+  font-size: 9px;
+  color: #303050;
+  letter-spacing: 0.5px;
+  text-align: center;
+  padding-bottom: 4px;
+}
