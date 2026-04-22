@@ -23,7 +23,7 @@ body {
   display: block;
 }
 
-/* ── Toggle button ───────────────────────────────────────────────────────────── */
+/* ── Toggle button ────────────────────────────────────────────────────────────── */
 #toggle-btn {
   position: fixed;
   top: 14px;
@@ -55,7 +55,7 @@ body {
   display: none;
 }
 
-/* ── Panel ───────────────────────────────────────────────────────────────────── */
+/* ── Panel ──────────────────────────────────────────────────────────────────────── */
 #panel {
   position: fixed;
   top: 0;
@@ -81,7 +81,7 @@ body {
   transform: translateX(0);
 }
 
-/* ── Panel header with close button ─────────────────────────────────────────── */
+/* ── Panel header with close button ───────────────────────────────────────── */
 .panel-header {
   display: flex;
   align-items: center;
@@ -113,7 +113,7 @@ body {
   color: #8090c0;
 }
 
-/* ── Controls ────────────────────────────────────────────────────────────────── */
+/* ── Controls ──────────────────────────────────────────────────────────────────────── */
 .ctrl {
   display: flex;
   flex-direction: column;
@@ -166,7 +166,7 @@ input[type="range"]::-moz-range-thumb {
   flex-shrink: 0;
 }
 
-/* ── Colors ──────────────────────────────────────────────────────────────────── */
+/* ── Colors ────────────────────────────────────────────────────────────────────────── */
 .color-row {
   display: flex;
   gap: 10px;
@@ -205,7 +205,7 @@ input[type="color"]::-webkit-color-swatch {
   border-radius: 2px;
 }
 
-/* ── Export button ───────────────────────────────────────────────────────────── */
+/* ── Export button ─────────────────────────────────────────────────────────────────── */
 #export-btn {
   margin-top: auto;
   background: transparent;
