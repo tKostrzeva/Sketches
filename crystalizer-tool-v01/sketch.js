@@ -99,7 +99,7 @@ function convexHull3D(pts) {
 // ── p5 sketch ──────────────────────────────────────────────────────────────────
 new p5(function(p) {
   const RADIUS = 150;
-  const DISP   = 100;
+  const DISP   = 200;
   const LIGHT  = norm3([0.8, 1.4, 1.0]);
 
   const cfg = {
@@ -117,7 +117,7 @@ new p5(function(p) {
     p.randomSeed(cfg.seed);
 
     // Point counts per complexity level
-    const counts = [18, 36, 72, 140];
+    const counts = [12, 24, 48, 96, 200, 400];
     const N = counts[cfg.complexity - 1];
 
     // Generate N random unit vectors (seeded) then displace with noise
@@ -142,8 +142,10 @@ new p5(function(p) {
       const nx = v[0]*cfg.nscale + cfg.offX;
       const ny = v[1]*cfg.nscale + cfg.offY;
       const nz = v[2]*cfg.nscale;
-      const n = p.noise(nx, ny, nz) * 0.65
-              + p.noise(nx*2.8+17.3, ny*2.8+5.1, nz*2.8) * 0.35;
+      const raw = p.noise(nx, ny, nz) * 0.65
+                + p.noise(nx*2.8+17.3, ny*2.8+5.1, nz*2.8) * 0.35;
+      // Power curve: exponent < 1 = rounder, > 1 = spikier
+      const n = Math.pow(raw, 1.8);
       const r = RADIUS + n * DISP;
       return [v[0]*r, v[1]*r, v[2]*r];
     });
@@ -282,7 +284,7 @@ new p5(function(p) {
       });
     }
 
-    const ptCounts = [18, 36, 72, 140];
+    const ptCounts = [12, 24, 48, 96, 200, 400];
     bindSlider('seed',       'seed',       v => Math.round(v));
     bindSlider('nscale',     'nscale',     v => v.toFixed(2));
     bindSlider('offx',       'offX',       v => v.toFixed(2));
