@@ -192,8 +192,8 @@ new p5(function(p) {
     for (const f of faceCache) {
       if (dot3(f.normal, eye) <= 0) continue;
 
-      const diff = Math.max(0, dot3(f.normal, LIGHT)) * 0.45 + 0.45;
-      const spec = Math.pow(Math.max(0, dot3(f.normal, halfDir)), 28) * 85;
+      const diff = Math.max(0, dot3(f.normal, LIGHT)) * 0.78 + 0.18;
+      const spec = Math.pow(Math.max(0, dot3(f.normal, halfDir)), 48) * 140;
 
       p.fill(
         Math.min(255, f.color[0]*diff + spec),
