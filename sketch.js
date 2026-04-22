@@ -104,7 +104,7 @@ new p5(function(p) {
 
   const cfg = {
     seed: 42, nscale: 0.80, offX: 0, offY: 0,
-    complexity: 2, colorA: '#1a3aff', colorB: '#ff1a6e'
+    complexity: 2, spike: 1.8, colorA: '#1a3aff', colorB: '#ff1a6e'
   };
 
   let pts, hullFaces, faceCache;
@@ -144,8 +144,7 @@ new p5(function(p) {
       const nz = v[2]*cfg.nscale;
       const raw = p.noise(nx, ny, nz) * 0.65
                 + p.noise(nx*2.8+17.3, ny*2.8+5.1, nz*2.8) * 0.35;
-      // Power curve: exponent < 1 = rounder, > 1 = spikier
-      const n = Math.pow(raw, 1.8);
+      const n = Math.pow(raw, cfg.spike);
       const r = RADIUS + n * DISP;
       return [v[0]*r, v[1]*r, v[2]*r];
     });
@@ -289,6 +288,7 @@ new p5(function(p) {
     bindSlider('nscale',     'nscale',     v => v.toFixed(2));
     bindSlider('offx',       'offX',       v => v.toFixed(2));
     bindSlider('offy',       'offY',       v => v.toFixed(2));
+    bindSlider('spike',      'spike',      v => v.toFixed(2));
     bindSlider('complexity', 'complexity', v => {
       const n = Math.round(v);
       return n+'  ('+ptCounts[n-1]+' pts)';
