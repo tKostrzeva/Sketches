@@ -90,11 +90,11 @@ function convexHull3D(pts) {
 new p5(function(p) {
   const RADIUS = 150;
   const DISP   = 200;
-  const LIGHT  = norm3([0.8, 1.4, 1.0]);
 
   const cfg = {
     seed: 42, nscale: 0.80, offX: 0, offY: 0,
-    complexity: 2, colorA: '#1a3aff', colorB: '#ff1a6e'
+    complexity: 2, spike: 1.8, opacity: 255,
+    colorA: '#1a3aff', colorB: '#ff1a6e'
   };
 
   let pts, hullFaces, faceCache;
@@ -126,8 +126,7 @@ new p5(function(p) {
       const nz = v[2]*cfg.nscale;
       const raw = p.noise(nx, ny, nz) * 0.65
                 + p.noise(nx*2.8+17.3, ny*2.8+5.1, nz*2.8) * 0.35;
-      // Power curve: exponent < 1 = rounder, > 1 = spikier
-      const n = Math.pow(raw, 1.8);
+      const n = Math.pow(raw, cfg.spike);
       const r = RADIUS + n * DISP;
       return [v[0]*r, v[1]*r, v[2]*r];
     });
@@ -164,18 +163,9 @@ new p5(function(p) {
     p.perspective(Math.PI/4, p.width/p.height, 1, 8000);
     if (!faceCache) return;
 
-    const eyeN = norm3(eye);
-    const halfDir = norm3([eyeN[0]+LIGHT[0],eyeN[1]+LIGHT[1],eyeN[2]+LIGHT[2]]);
-
     for (const f of faceCache) {
       if (dot3(f.normal, eye) <= 0) continue;
-      const diff = Math.max(0, dot3(f.normal,LIGHT))*0.45 + 0.45;
-      const spec = Math.pow(Math.max(0, dot3(f.normal,halfDir)),28)*85;
-      p.fill(
-        Math.min(255, f.color[0]*diff+spec),
-        Math.min(255, f.color[1]*diff+spec),
-        Math.min(255, f.color[2]*diff+spec)
-      );
+      p.fill(f.color[0], f.color[1], f.color[2], cfg.opacity);
       p.beginShape();
       p.vertex(f.a[0],f.a[1],f.a[2]);
       p.vertex(f.b[0],f.b[1],f.b[2]);
@@ -251,6 +241,15 @@ new p5(function(p) {
     bindSlider('offx',       'offX',       v => v.toFixed(2));
     bindSlider('offy',       'offY',       v => v.toFixed(2));
     bindSlider('complexity', 'complexity', v => { const n=Math.round(v); return n+'  ('+ptCounts[n-1]+' pts)'; });
+    bindSlider('spike',      'spike',      v => v.toFixed(2));
+
+    const opacityEl = document.getElementById('opacity');
+    const opacityVl = document.getElementById('opacity-v');
+    opacityEl.addEventListener('input', () => {
+      cfg.opacity = parseFloat(opacityEl.value);
+      if (opacityVl) opacityVl.textContent = Math.round(cfg.opacity);
+    });
+
     document.getElementById('colorA').addEventListener('input', e => { cfg.colorA=e.target.value; buildCrystal(); });
     document.getElementById('colorB').addEventListener('input', e => { cfg.colorB=e.target.value; buildCrystal(); });
     document.getElementById('export-btn').addEventListener('click', doExport);
