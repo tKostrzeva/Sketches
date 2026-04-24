@@ -1,36 +1,37 @@
 /* global p5 */
 
 new p5(function(p) {
-  const NUM_PARTICLES = 600;
-  const TRAIL_LEN     = 50;
-  const SPEED         = 2.0;
+  const SPEED = 2.0;
+  const FADE  = 0.04; // alpha reduction per frame via destination-out
 
   const cfg = {
-    mirrors: 4,
-    seed: 42,
-    nscale: 0.0030,
-    offX: 0,
-    offY: 0,
+    mirrors:    4,
+    seed:       42,
+    nscale:     0.0030,
+    offX:       0,
+    offY:       0,
+    swarmCount: 600,
     particleColor: '#7040ff',
-    bgColor: '#08080f',
+    bgColor:       '#08080f',
   };
 
   let particles = [];
+  let trailPG;
   let t = 0;
 
   class Particle {
     constructor() { this.spawn(); }
 
     spawn() {
-      this.x = p.random(-p.width / 2, p.width / 2);
-      this.y = p.random(-p.height / 2, p.height / 2);
-      this.history = [];
+      this.x  = p.random(-p.width / 2, p.width / 2);
+      this.y  = p.random(-p.height / 2, p.height / 2);
+      this.px = null;
+      this.py = null;
     }
 
     update() {
-      this.history.push({ x: this.x, y: this.y });
-      if (this.history.length > TRAIL_LEN) this.history.shift();
-
+      this.px = this.x;
+      this.py = this.y;
       const n = p.noise(
         this.x * cfg.nscale + cfg.offX,
         this.y * cfg.nscale + cfg.offY,
@@ -39,7 +40,6 @@ new p5(function(p) {
       const angle = n * p.TWO_PI * 4;
       this.x += Math.cos(angle) * SPEED;
       this.y += Math.sin(angle) * SPEED;
-
       const hw = p.width / 2 + 20;
       const hh = p.height / 2 + 20;
       if (this.x < -hw || this.x > hw || this.y < -hh || this.y > hh) {
@@ -56,73 +56,89 @@ new p5(function(p) {
     };
   }
 
+  // Fade trailPG toward transparent using canvas destination-out composite
+  function fadeTrail() {
+    const ctx = trailPG.drawingContext;
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = `rgba(0,0,0,${FADE})`;
+    ctx.fillRect(0, 0, trailPG.width, trailPG.height);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  // Paint new particle segments (one line per particle per frame)
+  function paintParticles() {
+    const col = hexToRGB(cfg.particleColor);
+    trailPG.push();
+    trailPG.translate(trailPG.width / 2, trailPG.height / 2);
+    trailPG.stroke(col.r, col.g, col.b, 200);
+    trailPG.strokeWeight(1.5);
+    trailPG.noFill();
+    for (const pt of particles) {
+      if (pt.px !== null) trailPG.line(pt.px, pt.py, pt.x, pt.y);
+    }
+    trailPG.pop();
+  }
+
+  // One simulation + paint step
+  function stepSim() {
+    t += 0.003;
+    for (const pt of particles) pt.update();
+    fadeTrail();
+    paintParticles();
+  }
+
+  // Composite trailPG onto target N times with rotational symmetry
+  function compositeOn(target, w, h) {
+    const step = p.TWO_PI / cfg.mirrors;
+    target.push();
+    target.translate(w / 2, h / 2);
+    for (let m = 0; m < cfg.mirrors; m++) {
+      target.push();
+      target.rotate(step * m);
+      target.image(trailPG, -w / 2, -h / 2);
+      target.pop();
+    }
+    target.pop();
+  }
+
+  function initTrailPG() {
+    if (trailPG) trailPG.remove();
+    trailPG = p.createGraphics(p.width, p.height);
+    trailPG.clear();
+  }
+
   function initParticles() {
     p.noiseSeed(cfg.seed);
     p.randomSeed(cfg.seed);
     t = 0;
+    trailPG.clear();
     particles = [];
-    for (let i = 0; i < NUM_PARTICLES; i++) {
-      const pt = new Particle();
-      const warmup = Math.floor(p.random(0, TRAIL_LEN));
-      for (let j = 0; j < warmup; j++) pt.update();
-      particles.push(pt);
+    for (let i = 0; i < cfg.swarmCount; i++) {
+      particles.push(new Particle());
     }
-  }
-
-  // Draws all particle trails into graphics context g (centered at 0,0)
-  function drawParticlesOn(g) {
-    const col  = hexToRGB(cfg.particleColor);
-    const M    = cfg.mirrors;
-    const step = p.TWO_PI / M;
-
-    g.noFill();
-
-    for (let m = 0; m < M; m++) {
-      g.push();
-      g.rotate(step * m);
-
-      for (const pt of particles) {
-        const len = pt.history.length;
-        if (len < 2) continue;
-        for (let i = 1; i < len; i++) {
-          const a = p.map(i, 0, len - 1, 0, 190);
-          const w = p.map(i, 0, len - 1, 0.3, 1.5);
-          g.stroke(col.r, col.g, col.b, a);
-          g.strokeWeight(w);
-          g.line(
-            pt.history[i - 1].x, pt.history[i - 1].y,
-            pt.history[i].x,     pt.history[i].y
-          );
-        }
-      }
-
-      g.pop();
-    }
+    for (let i = 0; i < 40; i++) stepSim(); // pre-warm trails
   }
 
   p.setup = function() {
     const wrap = document.getElementById('canvas-wrap');
     const cnv  = p.createCanvas(wrap.clientWidth, wrap.clientHeight);
     cnv.parent('canvas-wrap');
+    initTrailPG();
     initParticles();
     bindUI();
   };
 
   p.draw = function() {
-    t += 0.003;
-    for (const pt of particles) pt.update();
-
+    stepSim();
     const bg = hexToRGB(cfg.bgColor);
     p.background(bg.r, bg.g, bg.b);
-    p.push();
-    p.translate(p.width / 2, p.height / 2);
-    drawParticlesOn(p);
-    p.pop();
+    compositeOn(p, p.width, p.height);
   };
 
   p.windowResized = function() {
     const wrap = document.getElementById('canvas-wrap');
     p.resizeCanvas(wrap.clientWidth, wrap.clientHeight);
+    initTrailPG();
     initParticles();
   };
 
@@ -138,35 +154,39 @@ new p5(function(p) {
     triggerDownload(cnv, 'swarm.jpg', 'image/jpeg', 0.95);
   }
 
-  // PNG export: particles only, transparent background
+  // PNG export: composite trailPG onto transparent buffer (no background)
   function exportPng() {
     const pg = p.createGraphics(p.width, p.height);
-    pg.pixelDensity(p.pixelDensity());
     pg.clear();
-    pg.push();
-    pg.translate(pg.width / 2, pg.height / 2);
-    drawParticlesOn(pg);
-    pg.pop();
+    compositeOn(pg, p.width, p.height);
     triggerDownload(pg.elt, 'swarm.png', 'image/png', 1.0);
     pg.remove();
   }
 
   function bindUI() {
-    function sl(id, key, fmt, reinit) {
+    function sl(id, key, fmt, onchange) {
       const el = document.getElementById(id);
       const vl = document.getElementById(id + '-v');
       el.addEventListener('input', () => {
         cfg[key] = parseFloat(el.value);
         if (vl) vl.textContent = fmt(cfg[key]);
-        if (reinit) initParticles();
+        if (onchange) onchange(cfg[key]);
       });
     }
 
-    sl('mirrors', 'mirrors', v => Math.round(v), false);
-    sl('seed',    'seed',    v => Math.round(v), true);
-    sl('nscale',  'nscale',  v => v.toFixed(4),  false);
-    sl('offx',    'offX',    v => v.toFixed(2),  false);
-    sl('offy',    'offY',    v => v.toFixed(2),  false);
+    sl('mirrors',    'mirrors',    v => Math.round(v), null);
+    sl('seed',       'seed',       v => Math.round(v), () => initParticles());
+    sl('nscale',     'nscale',     v => v.toFixed(4),  null);
+    sl('offx',       'offX',       v => v.toFixed(2),  null);
+    sl('offy',       'offY',       v => v.toFixed(2),  null);
+    sl('swarmCount', 'swarmCount', v => Math.round(v), v => {
+      const n = Math.round(v);
+      if (n > particles.length) {
+        for (let i = particles.length; i < n; i++) particles.push(new Particle());
+      } else {
+        particles.length = n;
+      }
+    });
 
     document.getElementById('particleColor').addEventListener('input', e => {
       cfg.particleColor = e.target.value;
