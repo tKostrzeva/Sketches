@@ -205,9 +205,16 @@ input[type="color"]::-webkit-color-swatch {
   border-radius: 2px;
 }
 
-/* ── Export button ─────────────────────────────────────────────────────────────────── */
-#export-btn {
+/* ── Export buttons ────────────────────────────────────────────────────────────────── */
+.export-row {
+  display: flex;
+  gap: 8px;
   margin-top: auto;
+  flex-shrink: 0;
+}
+
+.export-btn {
+  flex: 1;
   background: transparent;
   border: 1px solid #2a2a50;
   color: #7080b0;
@@ -215,21 +222,13 @@ input[type="color"]::-webkit-color-swatch {
   font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  padding: 12px;
+  padding: 12px 6px;
   cursor: pointer;
   transition: border-color 0.2s, color 0.2s;
 }
 
-#export-btn:hover,
-#export-btn:active {
+.export-btn:hover,
+.export-btn:active {
   border-color: #5080ff;
   color: #90b0ff;
-}
-
-#hint {
-  font-size: 9px;
-  color: #303050;
-  letter-spacing: 0.5px;
-  text-align: center;
-  padding-bottom: 4px;
 }
