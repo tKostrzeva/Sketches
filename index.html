@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chladni tool v02</title>
+  <title>Chladni tool v03</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
 </head>
@@ -15,53 +15,21 @@
 
 <aside id="panel">
   <div class="panel-header">
-    <div class="panel-title">Chladni v02</div>
+    <div class="panel-title">Chladni v03</div>
     <button id="close-btn" aria-label="Close">&#10005;</button>
   </div>
 
   <div class="ctrl">
-    <div class="ctrl-label">Mirror Count <span class="val" id="mirrors-v">1</span></div>
-    <input type="range" id="mirrors" min="1" max="8" value="1" step="1">
+    <div class="ctrl-label">Point Scale <span class="val" id="pointSize-v">1.5</span></div>
+    <input type="range" id="pointSize" min="0.5" max="5.0" value="1.5" step="0.5">
   </div>
-
-  <div class="ctrl">
-    <div class="ctrl-label">Mode M <span class="val" id="mMode-v">2</span></div>
-    <input type="range" id="mMode" min="1" max="8" value="2" step="1">
-  </div>
-
-  <div class="ctrl">
-    <div class="ctrl-label">Mode N <span class="val" id="nMode-v">3</span></div>
-    <input type="range" id="nMode" min="1" max="8" value="3" step="1">
-  </div>
-
-  <div class="divider"></div>
 
   <div class="ctrl">
     <div class="ctrl-label">Spread <span class="val" id="spread-v">0.30</span></div>
     <input type="range" id="spread" min="0.05" max="2.00" value="0.30" step="0.05">
   </div>
 
-  <div class="ctrl">
-    <div class="ctrl-label">Sample Count <span class="val" id="sampleCount-v">150k</span></div>
-    <input type="range" id="sampleCount" min="10000" max="500000" value="150000" step="10000">
-  </div>
-
-  <div class="ctrl">
-    <div class="ctrl-label">Point Size <span class="val" id="pointSize-v">1.5</span></div>
-    <input type="range" id="pointSize" min="0.5" max="5.0" value="1.5" step="0.5">
-  </div>
-
   <div class="divider"></div>
-
-  <div class="ctrl">
-    <div class="ctrl-label">Turbulence <span class="val" id="turbulence-v">0.30</span></div>
-    <input type="range" id="turbulence" min="0" max="3" value="0.30" step="0.05">
-  </div>
-
-  <div class="ctrl">
-    <div class="ctrl-label">Noise Scale <span class="val" id="nscale-v">0.0030</span></div>
-    <input type="range" id="nscale" min="0.0005" max="0.0150" value="0.0030" step="0.0005">
-  </div>
 
   <div class="ctrl">
     <div class="ctrl-label">Noise Seed <span class="val" id="seed-v">42</span></div>
@@ -69,13 +37,13 @@
   </div>
 
   <div class="ctrl">
-    <div class="ctrl-label">Off X <span class="val" id="offx-v">0.00</span></div>
-    <input type="range" id="offx" min="-5" max="5" value="0" step="0.01">
+    <div class="ctrl-label">N <span class="val" id="nMode-v">3</span></div>
+    <input type="range" id="nMode" min="1" max="8" value="3" step="1">
   </div>
 
   <div class="ctrl">
-    <div class="ctrl-label">Off Y <span class="val" id="offy-v">0.00</span></div>
-    <input type="range" id="offy" min="-5" max="5" value="0" step="0.01">
+    <div class="ctrl-label">M <span class="val" id="mMode-v">2</span></div>
+    <input type="range" id="mMode" min="1" max="8" value="2" step="1">
   </div>
 
   <div class="divider"></div>
