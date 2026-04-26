@@ -7,11 +7,12 @@ new p5(function(p) {
   const NSCALE       = 0.003;
 
   const cfg = {
-    mMode:   2,
-    nMode:   3,
-    spread:  0.30,
-    pointSize: 1.5,
-    seed:    42,
+    mMode:      2,
+    nMode:      3,
+    resolution: 1,
+    spread:     0.30,
+    pointSize:  1.5,
+    seed:       42,
     particleColor: '#ffffff',
     bgColor:       '#000000',
   };
@@ -22,8 +23,8 @@ new p5(function(p) {
 
   function chladniField(x, y) {
     const S  = Math.min(p.width, p.height) / 2;
-    const nx = (x / S) * Math.PI;
-    const ny = (y / S) * Math.PI;
+    const nx = (x / S) * Math.PI * cfg.resolution;
+    const ny = (y / S) * Math.PI * cfg.resolution;
     const m  = cfg.mMode;
     const n  = cfg.nMode;
     if (m === n) {
@@ -154,8 +155,9 @@ new p5(function(p) {
       });
     }
 
-    sl('pointSize', 'pointSize', v => v.toFixed(1), 'render');
-    sl('spread',    'spread',    v => v.toFixed(2), 'regen');
+    sl('pointSize',  'pointSize',  v => v.toFixed(1),  'render');
+    sl('spread',     'spread',     v => v.toFixed(2),  'regen');
+    sl('resolution', 'resolution', v => Math.round(v), 'regen');
     sl('seed',      'seed',      v => Math.round(v), 'regen');
     sl('nMode',     'nMode',     v => Math.round(v), 'regen');
     sl('mMode',     'mMode',     v => Math.round(v), 'regen');
