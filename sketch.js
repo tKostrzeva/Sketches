@@ -3,7 +3,7 @@
 new p5(function(p) {
   // Fixed params (not exposed in UI)
   const SAMPLE_COUNT = 250000;
-  const TURBULENCE   = 0.30;
+  const TURBULENCE   = 0.90;  // high enough that seed changes are clearly visible
   const NSCALE       = 0.003;
 
   const cfg = {
@@ -51,13 +51,17 @@ new p5(function(p) {
     const hh = p.height / 2;
     const S  = Math.min(hw, hh);
 
+    // Offset into noise space derived from seed — different seeds explore
+    // completely different noise regions, giving clearly distinct warp patterns.
+    const noiseOff = cfg.seed * 11.3;
+
     for (let i = 0; i < SAMPLE_COUNT; i++) {
       const x = p.random(-hw, hw);
       const y = p.random(-hh, hh);
 
       let ex = x, ey = y;
-      const dnx = p.noise(x * NSCALE, y * NSCALE)       - 0.5;
-      const dny = p.noise(x * NSCALE + 100, y * NSCALE) - 0.5;
+      const dnx = p.noise(x * NSCALE + noiseOff, y * NSCALE)             - 0.5;
+      const dny = p.noise(x * NSCALE,             y * NSCALE + noiseOff) - 0.5;
       ex += dnx * TURBULENCE * S * 0.25;
       ey += dny * TURBULENCE * S * 0.25;
 
