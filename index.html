@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Swarm tool v01</title>
+  <title>Chladni tool v02</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
 </head>
@@ -15,18 +15,28 @@
 
 <aside id="panel">
   <div class="panel-header">
-    <div class="panel-title">Swarm v01</div>
+    <div class="panel-title">Chladni v02</div>
     <button id="close-btn" aria-label="Close">&#10005;</button>
   </div>
 
   <div class="ctrl">
-    <div class="ctrl-label">Mirror Count <span class="val" id="mirrors-v">4</span></div>
-    <input type="range" id="mirrors" min="1" max="8" value="4" step="1">
+    <div class="ctrl-label">Mirror Count <span class="val" id="mirrors-v">1</span></div>
+    <input type="range" id="mirrors" min="1" max="8" value="1" step="1">
   </div>
 
   <div class="ctrl">
-    <div class="ctrl-label">Swarm Count <span class="val" id="swarmCount-v">600</span></div>
-    <input type="range" id="swarmCount" min="100" max="3000" value="600" step="100">
+    <div class="ctrl-label">Mode M <span class="val" id="mMode-v">2</span></div>
+    <input type="range" id="mMode" min="1" max="8" value="2" step="1">
+  </div>
+
+  <div class="ctrl">
+    <div class="ctrl-label">Mode N <span class="val" id="nMode-v">3</span></div>
+    <input type="range" id="nMode" min="1" max="8" value="3" step="1">
+  </div>
+
+  <div class="ctrl">
+    <div class="ctrl-label">Turbulence <span class="val" id="turbulence-v">1.0</span></div>
+    <input type="range" id="turbulence" min="0" max="5" value="1" step="0.1">
   </div>
 
   <div class="ctrl">
@@ -49,16 +59,21 @@
     <input type="range" id="offy" min="-5" max="5" value="0" step="0.01">
   </div>
 
+  <div class="ctrl">
+    <div class="ctrl-label">Particle Count <span class="val" id="swarmCount-v">3000</span></div>
+    <input type="range" id="swarmCount" min="100" max="5000" value="3000" step="100">
+  </div>
+
   <div class="divider"></div>
 
   <div class="color-row">
     <div class="color-item">
       <label>Particles</label>
-      <input type="color" id="particleColor" value="#7040ff">
+      <input type="color" id="particleColor" value="#ffffff">
     </div>
     <div class="color-item">
       <label>Background</label>
-      <input type="color" id="bgColor" value="#08080f">
+      <input type="color" id="bgColor" value="#000000">
     </div>
   </div>
 
