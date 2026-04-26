@@ -34,19 +34,38 @@
     <input type="range" id="nMode" min="1" max="8" value="3" step="1">
   </div>
 
+  <div class="divider"></div>
+
   <div class="ctrl">
-    <div class="ctrl-label">Turbulence <span class="val" id="turbulence-v">1.0</span></div>
-    <input type="range" id="turbulence" min="0" max="5" value="1" step="0.1">
+    <div class="ctrl-label">Spread <span class="val" id="spread-v">0.30</span></div>
+    <input type="range" id="spread" min="0.05" max="2.00" value="0.30" step="0.05">
   </div>
 
   <div class="ctrl">
-    <div class="ctrl-label">Noise Seed <span class="val" id="seed-v">42</span></div>
-    <input type="range" id="seed" min="0" max="999" value="42" step="1">
+    <div class="ctrl-label">Sample Count <span class="val" id="sampleCount-v">150k</span></div>
+    <input type="range" id="sampleCount" min="10000" max="500000" value="150000" step="10000">
+  </div>
+
+  <div class="ctrl">
+    <div class="ctrl-label">Point Size <span class="val" id="pointSize-v">1.5</span></div>
+    <input type="range" id="pointSize" min="0.5" max="5.0" value="1.5" step="0.5">
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="ctrl">
+    <div class="ctrl-label">Turbulence <span class="val" id="turbulence-v">0.30</span></div>
+    <input type="range" id="turbulence" min="0" max="3" value="0.30" step="0.05">
   </div>
 
   <div class="ctrl">
     <div class="ctrl-label">Noise Scale <span class="val" id="nscale-v">0.0030</span></div>
     <input type="range" id="nscale" min="0.0005" max="0.0150" value="0.0030" step="0.0005">
+  </div>
+
+  <div class="ctrl">
+    <div class="ctrl-label">Noise Seed <span class="val" id="seed-v">42</span></div>
+    <input type="range" id="seed" min="0" max="999" value="42" step="1">
   </div>
 
   <div class="ctrl">
@@ -57,11 +76,6 @@
   <div class="ctrl">
     <div class="ctrl-label">Off Y <span class="val" id="offy-v">0.00</span></div>
     <input type="range" id="offy" min="-5" max="5" value="0" step="0.01">
-  </div>
-
-  <div class="ctrl">
-    <div class="ctrl-label">Particle Count <span class="val" id="swarmCount-v">3000</span></div>
-    <input type="range" id="swarmCount" min="100" max="5000" value="3000" step="100">
   </div>
 
   <div class="divider"></div>
