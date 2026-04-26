@@ -23,8 +23,8 @@ new p5(function(p) {
 
   function chladniField(x, y) {
     const S  = Math.min(p.width, p.height) / 2;
-    const nx = (x / S) * Math.PI * cfg.resolution;
-    const ny = (y / S) * Math.PI * cfg.resolution;
+    const nx = (x / S) * Math.PI / cfg.resolution;
+    const ny = (y / S) * Math.PI / cfg.resolution;
     const m  = cfg.mMode;
     const n  = cfg.nMode;
     if (m === n) {
@@ -161,7 +161,7 @@ new p5(function(p) {
 
     sl('pointSize',  'pointSize',  v => v.toFixed(1),  'render');
     sl('spread',     'spread',     v => v.toFixed(2),  'regen');
-    sl('resolution', 'resolution', v => Math.round(v), 'regen');
+    sl('resolution', 'resolution', v => v.toFixed(2),  'regen');
     sl('seed',      'seed',      v => Math.round(v), 'regen');
     sl('nMode',     'nMode',     v => Math.round(v), 'regen');
     sl('mMode',     'mMode',     v => Math.round(v), 'regen');
