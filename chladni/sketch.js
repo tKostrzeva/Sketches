@@ -31,12 +31,14 @@ new p5(function(p) {
     const wrap = document.getElementById('canvas-wrap');
     p.createCanvas(wrap.clientWidth, wrap.clientHeight).parent('canvas-wrap');
     p.noStroke();
-    p.fill(255);
+    p.fill(255, 60); // low alpha — clusters accumulate brightness via ADD blend
     bindUI();
   };
 
   p.draw = function() {
+    p.blendMode(p.BLEND);
     p.background(8, 8, 15);
+    p.blendMode(p.ADD);
 
     const m       = parseFloat(document.getElementById('m').value);
     const n       = parseFloat(document.getElementById('n').value);
