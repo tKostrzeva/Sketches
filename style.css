@@ -243,3 +243,45 @@ input[type="color"]::-webkit-color-swatch {
   border-color: #5080ff;
   color: #90b0ff;
 }
+
+/* ── Hue sliders ──────────────────────────────────────────────────────────────── */
+input[type="range"].hue-slider {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right,
+    hsl(0,65%,55%), hsl(30,65%,55%), hsl(60,65%,55%), hsl(90,65%,55%),
+    hsl(120,65%,55%), hsl(150,65%,55%), hsl(180,65%,55%), hsl(210,65%,55%),
+    hsl(240,65%,55%), hsl(270,65%,55%), hsl(300,65%,55%), hsl(330,65%,55%),
+    hsl(360,65%,55%));
+}
+
+/* ── Play button ─────────────────────────────────────────────────────────────── */
+.play-row {
+  flex-shrink: 0;
+  border-top: 1px solid #1a1a2e;
+  padding: 10px 0 4px;
+}
+
+.play-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px solid #2a2a50;
+  color: #7080b0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.play-btn:hover {
+  border-color: #5080ff;
+  color: #90b0ff;
+}
+
+.play-btn.active {
+  border-color: #4070dd;
+  color: #7090e0;
+}

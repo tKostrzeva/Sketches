@@ -1,193 +1,238 @@
 /* global p5 */
 
 new p5(function(p) {
-  // Fixed params (not exposed in UI)
-  const SAMPLE_COUNT = 250000;
-  const TURBULENCE   = 0.90;  // high enough that seed changes are clearly visible
-  const NSCALE       = 0.003;
+  const ZONE    = 110;   // px from each corner — drag zone radius
+  const MAX_F   = 20;    // max frequency for corner handles
+  const SAMPLES = 200000;
 
   const cfg = {
-    mMode:      2,
-    nMode:      3,
-    resolution: 1,
-    spread:     0.30,
-    pointSize:  1.5,
-    seed:       42,
-    particleColor: '#ffffff',
-    bgColor:       '#000000',
+    zoom:       1.0,
+    pointScale: 1.5,
+    spread:     0.15,
+    hueA:       200,
+    hueB:       40,
+    waveA:      1.0,
+    waveB:      1.0,
   };
 
-  let pts      = [];
-  let renderPG;
-  let timer    = null;
+  // freq[0]=TL, freq[1]=TR, freq[2]=BL, freq[3]=BR
+  // formula: cos(f0*u + pA)*cos(f3*v) - cos(f1*u)*cos(f2*v + pB)
+  const freq    = [3, 2, 3, 2];
+  let   t       = 0;
+  let   playing = false;
+  let   dragIdx = -1;
 
-  function chladniField(x, y) {
-    const S  = Math.min(p.width, p.height) / 2;
-    const nx = (x / S) * Math.PI / cfg.resolution;
-    const ny = (y / S) * Math.PI / cfg.resolution;
-    const m  = cfg.mMode;
-    const n  = cfg.nMode;
-    if (m === n) {
-      return Math.cos(m * nx) * Math.sin(n * ny);
+  // ── Chladni field ──────────────────────────────────────────────────────────
+  function chladni(x, y) {
+    const S  = Math.min(p.width, p.height) * 0.5;
+    const u  = (x / S) * cfg.zoom;
+    const v  = (y / S) * cfg.zoom;
+    const pA = t * cfg.waveA * 0.025;
+    const pB = t * cfg.waveB * 0.025;
+    return Math.cos(freq[0] * u + pA) * Math.cos(freq[3] * v)
+         - Math.cos(freq[1] * u)      * Math.cos(freq[2] * v + pB);
+  }
+
+  // ── Corner handle position — mapped along diagonal from corner ─────────────
+  function handlePos(i) {
+    const d    = ZONE * Math.sqrt((freq[i] - 1) / (MAX_F - 1));
+    const diag = d * 0.707;
+    switch (i) {
+      case 0: return { x: diag,            y: diag            };
+      case 1: return { x: p.width - diag,  y: diag            };
+      case 2: return { x: diag,            y: p.height - diag };
+      case 3: return { x: p.width - diag,  y: p.height - diag };
     }
-    return Math.cos(m * nx) * Math.cos(n * ny)
-         - Math.cos(n * nx) * Math.cos(m * ny);
   }
 
-  function hexToRGB(hex) {
-    return {
-      r: parseInt(hex.slice(1, 3), 16),
-      g: parseInt(hex.slice(3, 5), 16),
-      b: parseInt(hex.slice(5, 7), 16),
-    };
+  function freqFromCorner(i, mx, my) {
+    const corners = [
+      [0, 0], [p.width, 0], [0, p.height], [p.width, p.height],
+    ];
+    const [cx, cy] = corners[i];
+    const d = Math.min(ZONE, Math.hypot(mx - cx, my - cy));
+    return Math.max(1, Math.round(1 + (d / ZONE) ** 2 * (MAX_F - 1)));
   }
 
-  function resample() {
-    p.randomSeed(cfg.seed);
-    p.noiseSeed(cfg.seed);
-    pts = [];
+  // ── Render ─────────────────────────────────────────────────────────────────
+  function renderFrame() {
+    p.background(0);
+    p.colorMode(p.HSB, 360, 100, 100, 100);
+    p.noStroke();
 
     const hw = p.width  / 2;
     const hh = p.height / 2;
-    const S  = Math.min(hw, hh);
+    const r  = cfg.pointScale;
 
-    // Offset into noise space derived from seed — different seeds explore
-    // completely different noise regions, giving clearly distinct warp patterns.
-    const noiseOff = cfg.seed * 11.3;
-
-    for (let i = 0; i < SAMPLE_COUNT; i++) {
-      const x = p.random(-hw, hw);
-      const y = p.random(-hh, hh);
-
-      let ex = x, ey = y;
-      const dnx = p.noise(x * NSCALE + noiseOff, y * NSCALE)             - 0.5;
-      const dny = p.noise(x * NSCALE,             y * NSCALE + noiseOff) - 0.5;
-      ex += dnx * TURBULENCE * S * 0.25;
-      ey += dny * TURBULENCE * S * 0.25;
-
-      const f = chladniField(ex, ey);
-      if (p.random() < Math.exp(-Math.abs(f) / cfg.spread)) {
-        pts.push([x, y]);
+    for (let i = 0; i < SAMPLES; i++) {
+      const x   = p.random(-hw, hw);
+      const y   = p.random(-hh, hh);
+      const f   = Math.abs(chladni(x, y));
+      const acc = Math.exp(-f / cfg.spread);
+      if (p.random() < acc) {
+        const hue = p.lerp(cfg.hueA, cfg.hueB, 1 - acc);
+        p.fill(hue, 75, 100, 85);
+        p.ellipse(x + hw, y + hh, r * 2, r * 2);
       }
     }
+
+    p.colorMode(p.RGB, 255);
+    drawHandles();
   }
 
-  function renderToBuffer() {
-    if (renderPG) renderPG.remove();
-    renderPG = p.createGraphics(p.width, p.height);
-    renderPG.clear();
-
-    const col = hexToRGB(cfg.particleColor);
-    const ctx = renderPG.drawingContext;
-    const r   = cfg.pointSize / 2;
-    const ox  = p.width  / 2;
-    const oy  = p.height / 2;
-
-    ctx.fillStyle = `rgb(${col.r},${col.g},${col.b})`;
-    for (const [x, y] of pts) {
-      ctx.beginPath();
-      ctx.arc(ox + x, oy + y, r, 0, Math.PI * 2);
-      ctx.fill();
+  function drawHandles() {
+    p.push();
+    p.strokeWeight(1);
+    p.textSize(9);
+    p.textFont('Courier New');
+    for (let i = 0; i < 4; i++) {
+      const { x, y } = handlePos(i);
+      p.stroke(255, 100);
+      p.noFill();
+      p.ellipse(x, y, 20, 20);
+      p.line(x - 10, y, x + 10, y);
+      p.line(x, y - 10, x, y + 10);
+      p.noStroke();
+      p.fill(255, 160);
+      p.textAlign(i % 2 === 0 ? p.RIGHT : p.LEFT, i < 2 ? p.BOTTOM : p.TOP);
+      p.text(freq[i], x + (i % 2 === 0 ? -14 : 14), y + (i < 2 ? -14 : 14));
     }
+    p.pop();
   }
 
-  function regenerate() { resample(); renderToBuffer(); p.redraw(); }
-
-  function scheduleRegen(fn) {
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(() => { fn(); timer = null; }, 80);
+  // ── Hit test ───────────────────────────────────────────────────────────────
+  function hitHandle(mx, my) {
+    for (let i = 0; i < 4; i++) {
+      const { x, y } = handlePos(i);
+      if (Math.hypot(mx - x, my - y) < 22) return i;
+    }
+    return -1;
   }
 
+  // ── p5 lifecycle ───────────────────────────────────────────────────────────
   p.setup = function() {
     const wrap = document.getElementById('canvas-wrap');
-    const cnv  = p.createCanvas(wrap.clientWidth, wrap.clientHeight);
-    cnv.parent('canvas-wrap');
+    p.createCanvas(wrap.clientWidth, wrap.clientHeight).parent('canvas-wrap');
     p.noLoop();
-    regenerate();
     bindUI();
+    p.redraw();
   };
 
   p.draw = function() {
-    const bg = hexToRGB(cfg.bgColor);
-    p.background(bg.r, bg.g, bg.b);
-    if (renderPG) {
-      p.push();
-      p.translate(p.width / 2, p.height / 2);
-      p.image(renderPG, -p.width / 2, -p.height / 2);
-      p.pop();
-    }
+    if (playing) t++;
+    renderFrame();
   };
 
   p.windowResized = function() {
     const wrap = document.getElementById('canvas-wrap');
     p.resizeCanvas(wrap.clientWidth, wrap.clientHeight);
-    regenerate();
+    if (!playing) p.redraw();
   };
 
-  function triggerDownload(canvas, filename, mimeType, quality) {
+  // ── Mouse ──────────────────────────────────────────────────────────────────
+  p.mousePressed = function() {
+    dragIdx = hitHandle(p.mouseX, p.mouseY);
+    if (dragIdx >= 0) return false;
+  };
+
+  p.mouseDragged = function() {
+    if (dragIdx < 0) return;
+    freq[dragIdx] = freqFromCorner(dragIdx, p.mouseX, p.mouseY);
+    if (!playing) p.redraw();
+    return false;
+  };
+
+  p.mouseReleased = function() { dragIdx = -1; };
+
+  // ── Touch ──────────────────────────────────────────────────────────────────
+  p.touchStarted = function() {
+    if (p.touches.length === 1) {
+      dragIdx = hitHandle(p.touches[0].x, p.touches[0].y);
+      if (dragIdx >= 0) return false;
+    }
+  };
+
+  p.touchMoved = function() {
+    if (dragIdx < 0 || p.touches.length !== 1) return;
+    freq[dragIdx] = freqFromCorner(dragIdx, p.touches[0].x, p.touches[0].y);
+    if (!playing) p.redraw();
+    return false;
+  };
+
+  p.touchEnded = function() { dragIdx = -1; };
+
+  // ── Cursor ─────────────────────────────────────────────────────────────────
+  function setupCursor() {
+    const el = document.querySelector('#canvas-wrap canvas');
+    if (!el) return;
+    el.addEventListener('mousemove', e => {
+      const r = el.getBoundingClientRect();
+      el.style.cursor = dragIdx >= 0 ? 'grabbing'
+        : hitHandle(e.clientX - r.left, e.clientY - r.top) >= 0 ? 'grab' : 'default';
+    });
+  }
+
+  // ── Play / Pause ───────────────────────────────────────────────────────────
+  function setPlaying(on) {
+    playing = on;
+    if (!on) t = 0;
+    const btn = document.getElementById('play-btn');
+    if (btn) {
+      btn.textContent = on ? 'Pause' : 'Play';
+      btn.classList.toggle('active', on);
+    }
+    if (on) { p.loop(); } else { p.noLoop(); p.redraw(); }
+  }
+
+  // ── Export ─────────────────────────────────────────────────────────────────
+  function doExport(mime, filename, quality) {
+    if (!playing) p.redraw();
     const link    = document.createElement('a');
     link.download = filename;
-    link.href     = canvas.toDataURL(mimeType, quality);
+    link.href     = document.querySelector('#canvas-wrap canvas').toDataURL(mime, quality);
     link.click();
   }
 
-  function exportJpg() {
-    p.redraw();
-    triggerDownload(document.querySelector('#canvas-wrap canvas'), 'chladni.jpg', 'image/jpeg', 0.95);
-  }
-
-  function exportPng() {
-    const pg = p.createGraphics(p.width, p.height);
-    pg.clear();
-    pg.image(renderPG, 0, 0);
-    triggerDownload(pg.elt, 'chladni.png', 'image/png', 1.0);
-    pg.remove();
-  }
-
+  // ── UI bindings ────────────────────────────────────────────────────────────
   function bindUI() {
-    function renderAndRedraw() { renderToBuffer(); p.redraw(); }
-
-    function sl(id, key, fmt, action) {
+    function sl(id, key, fmt) {
       const el = document.getElementById(id);
       const vl = document.getElementById(id + '-v');
+      if (!el) return;
       el.addEventListener('input', () => {
         cfg[key] = parseFloat(el.value);
-        if (vl) vl.textContent = fmt(cfg[key]);
-        if      (action === 'regen')  scheduleRegen(regenerate);
-        else if (action === 'render') scheduleRegen(renderAndRedraw);
-        else if (action === 'draw')   p.redraw();
+        if (vl) {
+          if (key === 'hueA' || key === 'hueB') {
+            vl.style.color = `hsl(${cfg[key]}, 70%, 65%)`;
+          } else {
+            vl.textContent = fmt(cfg[key]);
+          }
+        }
+        if (!playing) p.redraw();
       });
+      if ((key === 'hueA' || key === 'hueB') && vl) {
+        vl.style.color = `hsl(${cfg[key]}, 70%, 65%)`;
+      }
     }
 
-    sl('pointSize',  'pointSize',  v => v.toFixed(1),  'render');
-    sl('spread',     'spread',     v => v.toFixed(2),  'regen');
-    sl('resolution', 'resolution', v => v.toFixed(2),  'regen');
-    sl('seed',      'seed',      v => Math.round(v), 'regen');
-    sl('nMode',     'nMode',     v => Math.round(v), 'regen');
-    sl('mMode',     'mMode',     v => Math.round(v), 'regen');
+    sl('waveA',      'waveA',      v => v.toFixed(1));
+    sl('waveB',      'waveB',      v => v.toFixed(1));
+    sl('zoom',       'zoom',       v => v.toFixed(1));
+    sl('pointScale', 'pointScale', v => v.toFixed(1));
+    sl('spread',     'spread',     v => v.toFixed(2));
+    sl('hueA',       'hueA',       v => v.toFixed(0));
+    sl('hueB',       'hueB',       v => v.toFixed(0));
 
-    document.getElementById('particleColor').addEventListener('input', e => {
-      cfg.particleColor = e.target.value;
-      scheduleRegen(renderAndRedraw);
-    });
-    document.getElementById('bgColor').addEventListener('input', e => {
-      cfg.bgColor = e.target.value;
-      p.redraw();
-    });
-
-    document.getElementById('export-jpg-btn').addEventListener('click', exportJpg);
-    document.getElementById('export-png-btn').addEventListener('click', exportPng);
+    document.getElementById('play-btn')?.addEventListener('click', () => setPlaying(!playing));
+    document.getElementById('export-jpg-btn')?.addEventListener('click', () => doExport('image/jpeg', 'chladni.jpg', 0.95));
+    document.getElementById('export-png-btn')?.addEventListener('click', () => doExport('image/png',  'chladni.png', 1.0));
 
     const panel     = document.getElementById('panel');
     const toggleBtn = document.getElementById('toggle-btn');
     const closeBtn  = document.getElementById('close-btn');
-    toggleBtn.addEventListener('click', () => {
-      panel.classList.add('open');
-      toggleBtn.classList.add('hidden');
-    });
-    closeBtn.addEventListener('click', () => {
-      panel.classList.remove('open');
-      toggleBtn.classList.remove('hidden');
-    });
+    toggleBtn?.addEventListener('click', () => { panel.classList.add('open'); toggleBtn.classList.add('hidden'); });
+    closeBtn?.addEventListener('click',  () => { panel.classList.remove('open'); toggleBtn.classList.remove('hidden'); });
+
+    setupCursor();
   }
 });
