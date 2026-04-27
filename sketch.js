@@ -30,8 +30,10 @@ new p5(function(p) {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   function renderFrame() {
+    p.blendMode(p.BLEND);
     p.background(0);
     p.colorMode(p.HSB, 360, 100, 100, 100);
+    p.blendMode(p.ADD);   // additive: overlapping grains accumulate brightness
     p.noStroke();
 
     const hw = p.width  / 2;
@@ -45,11 +47,12 @@ new p5(function(p) {
       const acc = Math.exp(-f / cfg.spread);
       if (p.random() < acc) {
         const hue = p.lerp(cfg.hueA, cfg.hueB, 1 - acc);
-        p.fill(hue, 75, 100, 85);
+        p.fill(hue, 85, 100, 18);
         p.ellipse(x + hw, y + hh, r * 2, r * 2);
       }
     }
 
+    p.blendMode(p.BLEND);
     p.colorMode(p.RGB, 255);
   }
 
