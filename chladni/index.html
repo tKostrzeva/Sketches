@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chladni Pattern Tool v01</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+  <style>
+    #reset-btn {
+      background: transparent;
+      border: 1px solid #2a2a50;
+      color: #7080b0;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 12px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    #reset-btn:hover { border-color: #5080ff; color: #90b0ff; }
+  </style>
+</head>
+<body>
+
+<div id="canvas-wrap"></div>
+
+<button id="toggle-btn" aria-label="Toggle controls">&#9776;</button>
+
+<aside id="panel">
+  <div class="panel-header">
+    <div class="panel-title">Chladni v01</div>
+    <button id="close-btn" aria-label="Close">&#10005;</button>
+  </div>
+
+  <div class="ctrl">
+    <div class="ctrl-label">Frequency M <span class="val" id="m-v">3</span></div>
+    <input type="range" id="m" min="1" max="10" value="3" step="1">
+  </div>
+
+  <div class="ctrl">
+    <div class="ctrl-label">Frequency N <span class="val" id="n-v">5</span></div>
+    <input type="range" id="n" min="1" max="10" value="5" step="1">
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="ctrl">
+    <div class="ctrl-label">Particle Density <span class="val" id="density-v">3000</span></div>
+    <input type="range" id="density" min="200" max="6000" value="3000" step="100">
+  </div>
+
+  <div class="ctrl">
+    <div class="ctrl-label">Particle Size <span class="val" id="size-v">2.0</span></div>
+    <input type="range" id="size" min="0.5" max="6" value="2" step="0.5">
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="ctrl">
+    <div class="ctrl-label">Zoom <span class="val" id="zoom-v">1.00</span></div>
+    <input type="range" id="zoom" min="0.5" max="3" value="1" step="0.05">
+  </div>
+
+  <div class="divider"></div>
+
+  <button id="reset-btn">Reset Particles</button>
+
+  <div id="hint">adjust sliders to sculpt the pattern</div>
+</aside>
+
+<script src="sketch.js"></script>
+</body>
+</html>
