@@ -1,57 +1,31 @@
 /* global p5 */
 
 new p5(function(p) {
-  const ZONE    = 110;   // px from each corner — drag zone radius
-  const MAX_F   = 20;    // max frequency for corner handles
   const SAMPLES = 200000;
 
   const cfg = {
+    waveA:      3.0,
+    waveB:      2.0,
     zoom:       1.0,
     pointScale: 1.5,
     spread:     0.15,
     hueA:       200,
     hueB:       40,
-    waveA:      1.0,
-    waveB:      1.0,
   };
 
-  // freq[0]=TL, freq[1]=TR, freq[2]=BL, freq[3]=BR
-  // formula: cos(f0*u + pA)*cos(f3*v) - cos(f1*u)*cos(f2*v + pB)
-  const freq    = [3, 2, 3, 2];
-  let   t       = 0;
-  let   playing = false;
-  let   dragIdx = -1;
+  let t       = 0;
+  let playing = false;
 
   // ── Chladni field ──────────────────────────────────────────────────────────
   function chladni(x, y) {
-    const S  = Math.min(p.width, p.height) * 0.5;
-    const u  = (x / S) * cfg.zoom;
-    const v  = (y / S) * cfg.zoom;
-    const pA = t * cfg.waveA * 0.025;
-    const pB = t * cfg.waveB * 0.025;
-    return Math.cos(freq[0] * u + pA) * Math.cos(freq[3] * v)
-         - Math.cos(freq[1] * u)      * Math.cos(freq[2] * v + pB);
-  }
-
-  // ── Corner handle position — mapped along diagonal from corner ─────────────
-  function handlePos(i) {
-    const d    = ZONE * Math.sqrt((freq[i] - 1) / (MAX_F - 1));
-    const diag = d * 0.707;
-    switch (i) {
-      case 0: return { x: diag,            y: diag            };
-      case 1: return { x: p.width - diag,  y: diag            };
-      case 2: return { x: diag,            y: p.height - diag };
-      case 3: return { x: p.width - diag,  y: p.height - diag };
-    }
-  }
-
-  function freqFromCorner(i, mx, my) {
-    const corners = [
-      [0, 0], [p.width, 0], [0, p.height], [p.width, p.height],
-    ];
-    const [cx, cy] = corners[i];
-    const d = Math.min(ZONE, Math.hypot(mx - cx, my - cy));
-    return Math.max(1, Math.round(1 + (d / ZONE) ** 2 * (MAX_F - 1)));
+    const S = Math.min(p.width, p.height) * 0.5;
+    const u = (x / S) * cfg.zoom;
+    const v = (y / S) * cfg.zoom;
+    // play: frequencies oscillate at different rates (phase offsets avoid t=0 being degenerate)
+    const m = playing ? cfg.waveA * Math.abs(Math.sin(t * 0.020 + 1.0)) : cfg.waveA;
+    const n = playing ? cfg.waveB * Math.abs(Math.sin(t * 0.017 + 2.0)) : cfg.waveB;
+    return Math.cos(m * u) * Math.cos(n * v)
+         - Math.cos(n * u) * Math.cos(m * v);
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -77,36 +51,6 @@ new p5(function(p) {
     }
 
     p.colorMode(p.RGB, 255);
-    drawHandles();
-  }
-
-  function drawHandles() {
-    p.push();
-    p.strokeWeight(1);
-    p.textSize(9);
-    p.textFont('Courier New');
-    for (let i = 0; i < 4; i++) {
-      const { x, y } = handlePos(i);
-      p.stroke(255, 100);
-      p.noFill();
-      p.ellipse(x, y, 20, 20);
-      p.line(x - 10, y, x + 10, y);
-      p.line(x, y - 10, x, y + 10);
-      p.noStroke();
-      p.fill(255, 160);
-      p.textAlign(i % 2 === 0 ? p.RIGHT : p.LEFT, i < 2 ? p.BOTTOM : p.TOP);
-      p.text(freq[i], x + (i % 2 === 0 ? -14 : 14), y + (i < 2 ? -14 : 14));
-    }
-    p.pop();
-  }
-
-  // ── Hit test ───────────────────────────────────────────────────────────────
-  function hitHandle(mx, my) {
-    for (let i = 0; i < 4; i++) {
-      const { x, y } = handlePos(i);
-      if (Math.hypot(mx - x, my - y) < 22) return i;
-    }
-    return -1;
   }
 
   // ── p5 lifecycle ───────────────────────────────────────────────────────────
@@ -128,49 +72,6 @@ new p5(function(p) {
     p.resizeCanvas(wrap.clientWidth, wrap.clientHeight);
     if (!playing) p.redraw();
   };
-
-  // ── Mouse ──────────────────────────────────────────────────────────────────
-  p.mousePressed = function() {
-    dragIdx = hitHandle(p.mouseX, p.mouseY);
-    if (dragIdx >= 0) return false;
-  };
-
-  p.mouseDragged = function() {
-    if (dragIdx < 0) return;
-    freq[dragIdx] = freqFromCorner(dragIdx, p.mouseX, p.mouseY);
-    if (!playing) p.redraw();
-    return false;
-  };
-
-  p.mouseReleased = function() { dragIdx = -1; };
-
-  // ── Touch ──────────────────────────────────────────────────────────────────
-  p.touchStarted = function() {
-    if (p.touches.length === 1) {
-      dragIdx = hitHandle(p.touches[0].x, p.touches[0].y);
-      if (dragIdx >= 0) return false;
-    }
-  };
-
-  p.touchMoved = function() {
-    if (dragIdx < 0 || p.touches.length !== 1) return;
-    freq[dragIdx] = freqFromCorner(dragIdx, p.touches[0].x, p.touches[0].y);
-    if (!playing) p.redraw();
-    return false;
-  };
-
-  p.touchEnded = function() { dragIdx = -1; };
-
-  // ── Cursor ─────────────────────────────────────────────────────────────────
-  function setupCursor() {
-    const el = document.querySelector('#canvas-wrap canvas');
-    if (!el) return;
-    el.addEventListener('mousemove', e => {
-      const r = el.getBoundingClientRect();
-      el.style.cursor = dragIdx >= 0 ? 'grabbing'
-        : hitHandle(e.clientX - r.left, e.clientY - r.top) >= 0 ? 'grab' : 'default';
-    });
-  }
 
   // ── Play / Pause ───────────────────────────────────────────────────────────
   function setPlaying(on) {
@@ -232,7 +133,5 @@ new p5(function(p) {
     const closeBtn  = document.getElementById('close-btn');
     toggleBtn?.addEventListener('click', () => { panel.classList.add('open'); toggleBtn.classList.add('hidden'); });
     closeBtn?.addEventListener('click',  () => { panel.classList.remove('open'); toggleBtn.classList.remove('hidden'); });
-
-    setupCursor();
   }
 });
