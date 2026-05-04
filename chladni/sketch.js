@@ -4,8 +4,8 @@
 // f(x,y) = cos(m*PI*x)*cos(n*PI*y) - cos(n*PI*x)*cos(m*PI*y)
 // Particles drift toward f(x,y) = 0 (the nodal lines)
 
-const MAX_PARTICLES = 6000;
-const STEP = 0.05; // random walk step size
+const MAX_PARTICLES = 15000;
+const STEP = 0.03; // smaller step → tighter convergence on nodal lines
 
 let particles = [];
 
@@ -31,14 +31,12 @@ new p5(function(p) {
     const wrap = document.getElementById('canvas-wrap');
     p.createCanvas(wrap.clientWidth, wrap.clientHeight).parent('canvas-wrap');
     p.noStroke();
-    p.fill(255, 60); // low alpha — clusters accumulate brightness via ADD blend
+    p.fill(255); // fully opaque — contrast comes from particle count alone
     bindUI();
   };
 
   p.draw = function() {
-    p.blendMode(p.BLEND);
     p.background(8, 8, 15);
-    p.blendMode(p.ADD);
 
     const m       = parseFloat(document.getElementById('m').value);
     const n       = parseFloat(document.getElementById('n').value);
