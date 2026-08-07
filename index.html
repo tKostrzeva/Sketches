@@ -3,80 +3,63 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Crystalizer tool v01</title>
+  <title>8bit_tex — Recursive Texture Rasterizer</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
 </head>
 <body>
 
-<div id="canvas-wrap"></div>
+<div id="canvas-wrap">
+  <canvas id="output"></canvas>
+  <video id="camera-video" autoplay playsinline muted></video>
+  <div id="drop-hint">Upload an image or start the camera<br>then add a texture array &rarr;</div>
+</div>
 
 <button id="toggle-btn" aria-label="Toggle controls">&#9776;</button>
 
 <aside id="panel">
   <div class="panel-header">
-    <div class="panel-title">Crystalizer v01</div>
+    <div class="panel-title">8bit_tex v01</div>
     <button id="close-btn" aria-label="Close">&#10005;</button>
   </div>
 
   <div class="ctrl">
-    <div class="ctrl-label">Noise Seed <span class="val" id="seed-v">42</span></div>
-    <input type="range" id="seed" min="0" max="999" value="42" step="1">
-  </div>
-
-  <div class="ctrl">
-    <div class="ctrl-label">Noise Scale <span class="val" id="nscale-v">0.80</span></div>
-    <input type="range" id="nscale" min="0.01" max="6.00" value="0.80" step="0.01">
-  </div>
-
-  <div class="ctrl">
-    <div class="ctrl-label">Off X <span class="val" id="offx-v">0.00</span></div>
-    <input type="range" id="offx" min="-5" max="5" value="0" step="0.01">
-  </div>
-
-  <div class="ctrl">
-    <div class="ctrl-label">Off Y <span class="val" id="offy-v">0.00</span></div>
-    <input type="range" id="offy" min="-5" max="5" value="0" step="0.01">
-  </div>
-
-  <div class="ctrl">
-    <div class="ctrl-label">
-      Complexity
-      <span class="val" id="complexity-v">2 &nbsp;(24 pts)</span>
+    <div class="ctrl-label">Source</div>
+    <div class="btn-row">
+      <label class="file-btn" for="img-input">Upload Image</label>
+      <input type="file" id="img-input" accept="image/*" hidden>
+      <button id="cam-btn" class="ghost-btn">Camera</button>
     </div>
-    <input type="range" id="complexity" min="1" max="6" value="2" step="1">
-  </div>
-
-  <div class="ctrl">
-    <div class="ctrl-label">Smooth / Spike <span class="val" id="spike-v">1.80</span></div>
-    <input type="range" id="spike" min="0.10" max="6.00" value="1.80" step="0.05">
-  </div>
-
-  <div class="ctrl">
-    <div class="ctrl-label">Opacity <span class="val" id="opacity-v">255</span></div>
-    <input type="range" id="opacity" min="0" max="255" value="255" step="1">
+    <button id="freeze-btn" class="ghost-btn hidden">Freeze Frame</button>
   </div>
 
   <div class="divider"></div>
 
-  <div class="color-row">
-    <div class="color-item">
-      <label>Color A</label>
-      <input type="color" id="colorA" value="#1a3aff">
-    </div>
-    <div class="color-item">
-      <label>Color B</label>
-      <input type="color" id="colorB" value="#ff1a6e">
-    </div>
+  <div class="ctrl">
+    <div class="ctrl-label">Texture Array <span class="val" id="tex-count">0 imgs</span></div>
+    <label class="file-btn" for="tex-input">Upload Images</label>
+    <input type="file" id="tex-input" accept="image/*" multiple hidden>
+    <div id="tex-strip"></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="ctrl">
+    <div class="ctrl-label">Threshold <span class="val" id="threshold-v">128</span></div>
+    <input type="range" id="threshold" min="1" max="254" value="128" step="1">
+  </div>
+
+  <div class="ctrl">
+    <div class="ctrl-label">Resolution <span class="val" id="resolution-v">16</span></div>
+    <input type="range" id="resolution" min="3" max="48" value="16" step="1">
   </div>
 
   <div class="divider"></div>
 
   <button id="export-btn">Export PNG</button>
 
-  <div id="hint">drag to orbit &nbsp;&middot;&nbsp; scroll to zoom</div>
+  <div id="hint">darkest cell &rarr; 8&times;8 split &nbsp;&middot;&nbsp; lightest &rarr; 1&times;1</div>
 </aside>
 
-<script src="sketch.js?v=3"></script>
+<script src="sketch.js?v=1"></script>
 </body>
 </html>

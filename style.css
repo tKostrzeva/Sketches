@@ -23,6 +23,31 @@ body {
   display: block;
 }
 
+#camera-video {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#drop-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.8;
+  letter-spacing: 0.5px;
+  color: #3a3a5c;
+  pointer-events: none;
+}
+
+#drop-hint.hidden {
+  display: none;
+}
+
 /* ── Toggle button ────────────────────────────────────────────────────────────── */
 #toggle-btn {
   position: fixed;
@@ -164,6 +189,65 @@ input[type="range"]::-moz-range-thumb {
   height: 1px;
   background: #1a1a2e;
   flex-shrink: 0;
+}
+
+/* ── Buttons / file inputs ─────────────────────────────────────────────────── */
+.btn-row {
+  display: flex;
+  gap: 8px;
+}
+
+.file-btn,
+.ghost-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid #2a2a50;
+  color: #7080b0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 10px 6px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.file-btn:hover,
+.ghost-btn:hover {
+  border-color: #5080ff;
+  color: #90b0ff;
+}
+
+#freeze-btn {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ── Texture strip ─────────────────────────────────────────────────────────── */
+#tex-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+  max-height: 132px;
+  overflow-y: auto;
+}
+
+.tex-thumb {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border: 1px solid #252540;
+  border-radius: 2px;
 }
 
 /* ── Colors ────────────────────────────────────────────────────────────────────────── */
